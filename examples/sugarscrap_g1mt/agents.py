@@ -83,7 +83,7 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
         self.internal_state = [
             s
             for s in self.internal_state
-            if not any(x in s for x in ["Sugar:", "Spice:", "MRS:", "WARNING:"])
+            if not any(x in s for x in ["Sugar", "Spice", "MRS", "WARNING_"])
         ]
 
         self.internal_state.append(f"My Sugar inventory is: {self.sugar}")
@@ -96,6 +96,10 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
             self.internal_state.append(
                 "WARNING: I am in danger of starvation from lack of sugar"
             )
+        if self.spice < self.metabolism_spice * 2:
+            self.internal_state.append(
+                "WARNING: I am in danger of starvation from lack of spice"
+            )
 
     def step(self):
         self.sugar -= self.metabolism_sugar
@@ -103,7 +107,7 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
 
         if self.sugar <= 0 or self.spice <= 0:
             self.model.grid.remove_agent(self)
-            self.model.schedule.remove(self)
+            self.remove()
             return
 
         self.update_internal_metrics()
@@ -123,7 +127,7 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
 
         if self.sugar <= 0 or self.spice <= 0:
             self.model.grid.remove_agent(self)
-            self.model.schedule.remove(self)
+            self.remove()
             return
 
         self.update_internal_metrics()

@@ -11,7 +11,6 @@ from mesa.visualization import (
 
 from examples.sugarscrap_g1mt.agents import Resource, Trader
 from examples.sugarscrap_g1mt.model import SugarScapeModel
-from mesa_llm.parallel_stepping import enable_automatic_parallel_stepping
 from mesa_llm.reasoning.react import ReActReasoning
 
 # Suppress Pydantic serialization warnings
@@ -25,7 +24,7 @@ warnings.filterwarnings(
 # Also suppress through logging
 logging.getLogger("pydantic").setLevel(logging.ERROR)
 
-enable_automatic_parallel_stepping(mode="threading")
+# enable_automatic_parallel_stepping(mode="threading")
 
 load_dotenv()
 
@@ -36,12 +35,12 @@ model_params = {
         "value": 42,
         "label": "Random Seed",
     },
-    "initial_traders": 10,
+    "initial_traders": 2,
     "initial_resources": 10,
     "width": 10,
     "height": 10,
     "reasoning": ReActReasoning,
-    "llm_model": "gemini/gemini-1.5-flash",
+    "llm_model": "gemini/gemini-2.5-flash",
     "vision": 5,
     "parallel_stepping": True,
 }
