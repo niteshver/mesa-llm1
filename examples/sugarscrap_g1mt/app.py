@@ -40,7 +40,7 @@ model_params = {
     "width": 10,
     "height": 10,
     "reasoning": ReActReasoning,
-    "llm_model": "gemini/gemini-2.5-flash",
+    "llm_model": "gemini/gemini-2.5-flash-lite",
     "vision": 5,
     "parallel_stepping": True,
 }
