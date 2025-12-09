@@ -45,6 +45,9 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
         self.metabolism_sugar = metabolism_sugar
         self.metabolism_spice = metabolism_spice
 
+        self.prices = []
+        self.trade_partners = []
+
         self.memory = STLTMemory(
             agent=self,
             display=True,
@@ -101,6 +104,9 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
                 "WARNING: I am in danger of starvation from lack of spice"
             )
 
+    def get_trade(self):
+        return self.trade_partners
+
     def step(self):
         self.sugar -= self.metabolism_sugar
         self.spice -= self.metabolism_spice
@@ -141,16 +147,22 @@ class Trader(LLMAgent, mesa.discrete_space.CellAgent):
 
 
 class Resource(mesa.discrete_space.CellAgent):
-    def __init__(self, model, max_capacity=10, current_amount=10, growback=1):
+    def __init__(
+        self, model, max_capacity=10, current_amount=10, growback=1, type="sugar"
+    ):
         super().__init__(model=model)
 
         self.max_capacity = max_capacity
         self.current_amount = current_amount
         self.growback = growback
+        self.type = type
 
         self.internal_state = []
 
         self.tool_manager = resource_tool_manager
+
+    def get_trade(self):
+        return []
 
     def step(self):
         if self.current_amount < self.max_capacity:

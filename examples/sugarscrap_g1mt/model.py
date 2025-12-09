@@ -1,5 +1,6 @@
 import random
 
+import numpy as np
 from mesa.datacollection import DataCollector
 from mesa.model import Model
 from mesa.space import MultiGrid
@@ -8,6 +9,22 @@ from rich import print
 from examples.sugarscrap_g1mt.agents import Resource, Trader
 from mesa_llm.reasoning.reasoning import Reasoning
 from mesa_llm.recording.record_model import record_model
+
+
+# Helper Functions
+def flatten(list_of_lists):
+    """
+    helper function for model datacollector for trade price
+    collapses agent price list into one list
+    """
+    return [item for sublist in list_of_lists for item in sublist]
+
+
+def geometric_mean(list_of_prices):
+    """
+    find the geometric mean of a list of prices
+    """
+    return np.exp(np.log(list_of_prices).mean())
 
 
 @record_model(output_dir="recordings")
@@ -30,6 +47,11 @@ class SugarScapeModel(Model):
         self.parallel_stepping = parallel_stepping
         self.grid = MultiGrid(self.width, self.height, torus=False)
 
+        self.total_sugar_harvested = 0
+        self.total_spice_harvested = 0
+        self.step_sugar_harvest = 0
+        self.step_spice_harvest = 0
+
         model_reporters = {
             "Trader_Count": lambda m: sum(1 for a in m.agents if isinstance(a, Trader)),
             "Total_Sugar": lambda m: sum(
@@ -38,12 +60,22 @@ class SugarScapeModel(Model):
             "Total_Spice": lambda m: sum(
                 a.spice for a in m.agents if isinstance(a, Trader)
             ),
+            "#Traders": lambda m: sum(1 for a in m.agents if isinstance(a, Trader)),
+            "Trade Volume": lambda m: sum(
+                len(a.trade_partners) for a in m.agents if isinstance(a, Trader)
+            ),
+            "Price": lambda m: geometric_mean(
+                flatten([a.prices for a in m.agents if isinstance(a, Trader)])
+            ),
+            "Step_Sugar_Harvest": lambda m: m.step_sugar_harvest,
+            "Step_Spice_Harvest": lambda m: m.step_spice_harvest,
         }
 
         agent_reporters = {
             "sugar": lambda a: getattr(a, "sugar", None),
             "spice": lambda a: getattr(a, "spice", None),
             "mrs": lambda a: a.calculate_mrs() if isinstance(a, Trader) else None,
+            "Trade Network": lambda a: a.get_trade(),
         }
 
         self.datacollector = DataCollector(
@@ -52,8 +84,13 @@ class SugarScapeModel(Model):
 
         for _i in range(initial_resources):
             max_cap = random.randint(2, 5)
+            type = random.choice(["sugar", "spice"])
             resource = Resource(
-                model=self, max_capacity=max_cap, current_amount=max_cap, growback=1
+                model=self,
+                max_capacity=max_cap,
+                current_amount=max_cap,
+                growback=1,
+                type=type,
             )
 
             x = random.randrange(self.width)
@@ -84,8 +121,8 @@ class SugarScapeModel(Model):
         y_pos = self.rng.integers(0, self.grid.height, size=(initial_traders,))
 
         for agent, i, j in zip(agents, x_pos, y_pos):
-            agent.sugar = random.randint(5, 25)
-            agent.spice = random.randint(5, 25)
+            agent.sugar = random.randint(50, 100)
+            agent.spice = random.randint(50, 100)
             agent.metabolism_sugar = random.randint(1, 4)
             agent.metabolism_spice = random.randint(1, 4)
 
@@ -97,6 +134,10 @@ class SugarScapeModel(Model):
         """
         Execute one step of the model.
         """
+        # Reset counters
+        self.step_sugar_harvest = 0
+        self.step_spice_harvest = 0
+
         print(
             f"\n[bold purple] step  {self.steps} ────────────────────────────────────────────────────────────────────────────────[/bold purple]"
         )

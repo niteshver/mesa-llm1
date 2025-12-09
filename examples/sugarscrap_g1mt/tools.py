@@ -42,16 +42,25 @@ def move_to_best_resource(agent: "LLMAgent") -> str:
     if best_cell:
         agent.model.grid.move_agent(agent, best_cell)
 
-        harvested = 0
+        harvested_sugar = 0
+        harvested_spice = 0
+
         cell_contents = agent.model.grid.get_cell_list_contents(best_cell)
         for obj in cell_contents:
             if isinstance(obj, Resource):
-                harvested = obj.current_amount
-                obj.current_amount = 0  # Harvest all available resource
+                if obj.type == "sugar":
+                    harvested_sugar = obj.current_amount
+                    obj.current_amount = 0  # Harvest all available resource
+                elif obj.type == "spice":
+                    harvested_spice = obj.current_amount
+                    obj.current_amount = 0  # Harvest all available resource
 
-        agent.sugar += harvested
-        agent.spice += harvested
-        return f"agent {agent.unique_id} moved to {best_cell}. and harvested {harvested} resources."
+        agent.sugar += harvested_sugar
+        agent.spice += harvested_spice
+        agent.model.total_sugar_harvested += harvested_sugar
+        agent.model.total_spice_harvested += harvested_spice
+
+        return f"agent {agent.unique_id} moved to {best_cell}. and harvested {harvested_sugar} and {harvested_spice} resources."
     else:
         return f"agent {agent.unique_id} found no resources to move to."
 
