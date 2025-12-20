@@ -159,6 +159,25 @@ if __name__ == "__main__":
     model.step()  # One step = all 5 agents call the LLM once
 ```
 
+```bash
+Agent 5: I will offer to buy one unit of good X from agent 2 at a price of $15, hoping to capitalize on the perceived shortage in the market.
+
+Agent 3: I will scan the current prices of wheat, coffee, and sugar on the market boards to assess opportunities for profitable trades or negotiations.
+
+Agent 1: I will scan the current market prices and inventory levels to determine if I can make a profitable trade with another agent, specifically looking for an opportunity to buy low or sell high.
+
+Agent 4: I will observe the current prices of all available goods and attempt to identify any potential arbitrage opportunities or mispricings that I can exploit.
+
+Agent 2: I'll check the current market prices of the two products I have available (Widgets and Gizmos) to determine my optimal asking prices for the rest of the trading session.
+```
+
+```bash
+# Challenges: Try different llm and no. of agents.
+```
+
+## Exercise
+Change the above code and see the impact of dfferent model, no of prompt.
+
 
 
 
