@@ -14,26 +14,35 @@ In Mesa LLm, the Agents is that reason using language inside a Mesa simulation l
 ## Tutorial Setup
 Create and activate a virtual environment. Python version 3.12 or higher is required.
 
-## Install Mesa LLM
+## Install Mesa LLM & required package
 
 Install Mesa LLM
 
 ```bash
 pip install -U mesa-llm
+```
 
 Mesa-LLM pre-releases can be installed with:
 ```bash
 pip install -U --pre mesa-llm
+```
 
 You can also use pip to install the GitHub version:
 ```bash
 pip install -U -e git+https://github.com/mesa/mesa-llm.git#egg=mesa-llm
-
+```
+Install Ollama & llama3
+```bash
+pip install ollama
+ollama run llama3
+```
+You can also install [Ollama](https://ollama.com/) from official website
 
 
 Or any other (development) branch on this repo or your own fork:
 ```bash
 pip install -U -e git+https://github.com/YOUR_FORK/mesa-llm@YOUR_BRANCH#egg=mesa-llm
+```
 
 
 ### Mesa-LLM supports the following LLM models:
@@ -60,6 +69,7 @@ Create a new notebook named example.ipynb or whatever you want.
 This includes importing of dependencies needed for the tutorial.
 ```bash
 import mesa_llm
+```
 
 ## Creating the Agent
 We begin by defining a minimal agent that uses a language model to reason about its behavior at each simulation step. The agent represents an individual participant in the model that receives a textual prompt and produces a natural-language response describing its intended action.
@@ -100,7 +110,7 @@ class LanguageAgent(mesa.Agent):
 
         text = response["message"]["content"].strip()
         print(f"Agent {self.unique_id}: {text}")
-
+```
 
 ## Create the Model
 After defining the agent, we create the model that manages the simulation.
@@ -135,6 +145,7 @@ class LanguageModel(mesa.Model):
         shuffle_do("step") = random order, all agents call step().
         """
         self.agents.shuffle_do("step")  # random activation of all agents
+```        
 
 
 ## Running the Model
@@ -146,6 +157,7 @@ if __name__ == "__main__":
     print("Starting Mesa-LLM with Ollama...")
     model = LanguageModel(5)
     model.step()  # One step = all 5 agents call the LLM once
+```
 
 
 
