@@ -62,24 +62,44 @@ This includes importing of dependencies needed for the tutorial.
 import mesa_llm
 
 ## Creating the Agent
-We begin with a minimal agent definition and gradually extend its behavior throughout the tutorial.
+We begin by defining a minimal agent that uses a language model to reason about its behavior at each simulation step. The agent represents an individual participant in the model that receives a textual prompt and produces a natural-language response describing its intended action.
 
-Although the agent uses language-based reasoning, it is still a standard Mesa agent. It follows Mesa’s normal execution model and relies on the same unique_id mechanism for identification, model access, and scheduling.
+Although the agent relies on language-based reasoning, it remains a standard Mesa agent. It inherits from mesa.Agent, follows Mesa’s normal execution loop, and is automatically assigned a unique_id by the model. Mesa continues to handle scheduling and activation without any modification.
 
-During each model step, the agent receives a text prompt and produces a language-based response. This replaces traditional rule-based decision logic with language-driven reasoning, while keeping the rest of the Mesa workflow unchanged.
+The main difference lies in how decisions are made during a step. Instead of using hard-coded rules, the agent builds a short natural-language prompt describing its role in the simulation and sends it to a language model for reasoning. In this tutorial, we use Ollama with a local Llama 3 model as the language backend.
+
+The generated response is treated as the agent’s reasoning output and printed directly, allowing us to observe how different agents interpret the same simulation context.
 The LanguageAgent class is created with the following code:
 ```bash
 class LanguageAgent(mesa.Agent):
     """
-    Mesa-LLM agent that performs language-based reasoning.
-
-    This agent is a regular Mesa agent and inherits all standard
-    Mesa functionality, including unique_id handling and access
-    to the parent model.
+    A simple LLM-powered agent in Mesa-LLM style.
     """
 
-    def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
+    def __init__(self, model):
+        # In Mesa 3, unique_id is assigned automatically by the model
+        super().__init__(model=model)
+
+    def step(self):
+        """
+        One step of the agent:
+        - Build a prompt with its unique_id.
+        - Ask the local Llama 3 model (via Ollama).
+        - Print the response.
+        """
+        prompt = (
+            f"You are agent {self.unique_id} in a simple market simulation. "
+            f"Other agents are trading and negotiating. "
+            f"Describe your next action in one short sentence."
+        )
+
+        response = ollama.chat(
+            model="llama3",
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        text = response["message"]["content"].strip()
+        print(f"Agent {self.unique_id}: {text}")
 
 
 ## Create the Model
@@ -96,26 +116,36 @@ The LanguageModel class is created with the following code:
 ```bash 
 class LanguageModel(mesa.Model):
     """
-    Mesa model that manages LLM-powered agents.
+    Mesa model with LLM-powered agents (Mesa 3 style).
     """
-    def __init__(self, n_agents=5):
-        super().__init__()
 
-        # Shared LLM client (Ollama)
-        self.llm = llm
+    def __init__(self, n_agents: int = 5, seed: int | None = None):
+        # Mesa 3 requires calling super().__init__
+        super().__init__(seed=seed)
 
-        # Scheduler controls agent activation order
-        self.schedule = mesa.time.RandomActivation(self)
-
-        # Create agents and add them to the scheduler
-        for i in range(n_agents):
-            agent = LanguageAgent(i, self)
-            self.schedule.add(agent)
+        # Create agents; Mesa 3 automatically tracks them in model.agents
+        for _ in range(n_agents):
+            LanguageAgent(model=self)
 
     def step(self):
-        # Activate all agents (each agent calls the LLM in its step)
-        self.schedule.step()
+        """
+        Advance the model by one step.
 
+        Mesa 3: use AgentSet API for activation.
+        shuffle_do("step") = random order, all agents call step().
+        """
+        self.agents.shuffle_do("step")  # random activation of all agents
+
+
+## Running the Model
+
+The model is initialized with a fixed number of agents (example = 5), each identified by a unique unique_id.
+When the model step is executed, the scheduler activates all agents once. During their activation, each agent performs its step() method, where it receives a text prompt and generates a language-based response using the shared LLM client.
+```bash
+if __name__ == "__main__":
+    print("Starting Mesa-LLM with Ollama...")
+    model = LanguageModel(5)
+    model.step()  # One step = all 5 agents call the LLM once
 
 
 
