@@ -1,10 +1,26 @@
 # Creating Your First mesa-llm Model
-[Mesa LLM](https://github.com/mesa/mesa-llm) is a set of tools that combines Large Language Models (LLMs) with [Agent-Based Modeling](https://en.wikipedia.org/wiki/Agent-based_model) (ABM) using the Mesa framework. It allows developers and researchers to build simulations where agents powered by LLMs can communicate, reason, remember, and make decisions inside realistic environments such as markets, organizations, or societies.
 
-This approach is especially useful for studying how complex and emergent behaviors arise from simple agent interactions. Mesa LLM also helps in designing more human-like, language-driven agents and provides tools (such as MESA for Inference) to analyze and evaluate LLM performance. Overall, it enables the creation of smarter, more interactive AI systems for applications ranging from economic simulations to advanced code review and analysis.
+## Tutorial Description
+This tutorial introduces mesa-llm by walking through the construction of a simple language-driven agent model built on top of Mesa. While Mesa traditionally relies on rule-based agent behavior, mesa-llm enables agents to reason and decide using natural language through integration with large language models.
 
-## Model Discription
-In Mesa LLm, the Agents is that reason using language inside a Mesa simulation loop.Each agent is capable of processing a textual prompt and generating a natural-language response during its reasoning step.
+In this tutorial, we build a minimal model in which each agent uses a language model to describe its next action at every simulation step. The goal is not to create a complex simulation, but to clearly demonstrate how language-based reasoning can be embedded into Mesa’s existing execution workflow.
+
+By the end of this tutorial, you will understand how mesa-llm fits into the Mesa framework, how language reasoning replaces traditional decision logic, and how different language model backends (such as Ollama) can be integrated without modifying the overall simulation structure.
+
+## About mesa-llm
+
+[Mesa LLM](https://github.com/mesa/mesa-llm) is a set of tools that integrates Large Language Models (LLMs) with [Agent-based modeling](https://en.wikipedia.org/wiki/Agent-based_model) using the Mesa framework. It enables simulations in which agents use natural language to reason, communicate, and make decisions while still operating within Mesa’s standard modeling and scheduling workflow.
+
+This approach is particularly useful for exploring how complex or emergent behavior can arise from interactions between language-driven agents. By combining Mesa’s structured simulation environment with LLM-based reasoning, Mesa LLM allows researchers and developers to experiment with more flexible, human-like agent behavior in settings such as markets, organizations, or social systems.
+
+Overall, Mesa LLM focuses on providing a practical bridge between traditional agent-based models and modern language models, making it easier to study and prototype simulations where decision-making is driven by natural language rather than fixed rules.
+
+## Model Description
+The model consists of a fixed number of agents, each representing an independent participant in a simple simulated environment. At each step of the simulation, every agent is activated once and asked to reason about its next action using natural language.
+
+Instead of relying on hard-coded rules or conditional logic, agents generate their behavior by responding to a textual prompt that describes their role and context within the model. This response is produced by a language model and treated as the agent’s reasoning output for that step.
+
+Importantly, the rest of the simulation remains unchanged from a standard Mesa model. Mesa continues to manage agent creation, scheduling, and execution order, while mesa-llm is responsible only for how agents reason and generate decisions. This separation allows language-based reasoning to be added to existing Mesa models with minimal changes to their overall structure.
 
 ## What the model does
 * The model initializes a small number of agents. Each agent represents an entity capable of reasoning using language.
@@ -14,15 +30,15 @@ In Mesa LLm, the Agents is that reason using language inside a Mesa simulation l
 ## Tutorial Setup
 Create and activate a virtual environment. Python version 3.12 or higher is required.
 
-## Install Mesa LLM & required package
+## Install mesa-llm and required package
 
-Install Mesa LLM
+Install mesa-llm
 
 ```bash
 pip install -U mesa-llm
 ```
 
-Mesa-LLM pre-releases can be installed with:
+Mesa-llm pre-releases can be installed with:
 ```bash
 pip install -U --pre mesa-llm
 ```
@@ -34,8 +50,11 @@ pip install -U -e git+https://github.com/mesa/mesa-llm.git#egg=mesa-llm
 Install Ollama & llama3
 ```bash
 pip install ollama
+
 ollama run llama3
 ```
+The command downloads and runs the Llama 3 model locally.
+
 You can also install [Ollama](https://ollama.com/) from official website
 
 
@@ -45,7 +64,7 @@ pip install -U -e git+https://github.com/YOUR_FORK/mesa-llm@YOUR_BRANCH#egg=mesa
 ```
 
 
-### Mesa-LLM supports the following LLM models:
+### Mesa-llm supports the following LLM models:
 * OpenAI
 * Anthropic
 * xAI
@@ -56,19 +75,23 @@ pip install -U -e git+https://github.com/YOUR_FORK/mesa-llm@YOUR_BRANCH#egg=mesa
 * Gemini
 
 ## Building the Model
-After Mesa LLm is installed a model can be built.
-This tutorial is written in [Jupyter](https://jupyter.org/) to facilitate the explanation portions.
+After Mesa-llm is installed a model can be built.
+This tutorial can be followed in a regular Python script or in a [Jupyter](https://jupyter.org/) notebook.
 
-Start Jupyter form the command line:
- 
- Jupyter lab
+
+Start Jupyter from the command line:
+ ```bash
+ jupyter lab
+ ```
 
 Create a new notebook named example.ipynb or whatever you want.
 
 ## Important Dependencies
 This includes importing of dependencies needed for the tutorial.
-```bash
+```python
 import mesa_llm
+import mesa
+import ollama
 ```
 
 ## Creating the Agent
@@ -80,15 +103,15 @@ The main difference lies in how decisions are made during a step. Instead of usi
 
 The generated response is treated as the agent’s reasoning output and printed directly, allowing us to observe how different agents interpret the same simulation context.
 The LanguageAgent class is created with the following code:
-```bash
+```python
 class LanguageAgent(mesa.Agent):
     """
-    A simple LLM-powered agent in Mesa-LLM style.
+    A simple LLM-powered agent in Mesa-llm style.
     """
 
     def __init__(self, model):
         # In Mesa 3, unique_id is assigned automatically by the model
-        super().__init__(model=model)
+        super().__init__(model=model)                    
 
     def step(self):
         """
@@ -104,11 +127,11 @@ class LanguageAgent(mesa.Agent):
         )
 
         response = ollama.chat(
-            model="llama3",
+            model="llama3",                                # use llama3 via ollama
             messages=[{"role": "user", "content": prompt}],
         )
 
-        text = response["message"]["content"].strip()
+        text = response["message"]["content"].strip()      
         print(f"Agent {self.unique_id}: {text}")
 ```
 
@@ -116,14 +139,11 @@ class LanguageAgent(mesa.Agent):
 After defining the agent, we create the model that manages the simulation.
 In Mesa, the model acts as a container for all agents and is responsible for their creation, scheduling, and execution over time.
 
-In this tutorial, the model also stores the language model client. This allows all agents to share the same LLM instance instead of creating one per agent, which is both simpler and more efficient.
-
-When a LanguageModel is initialized, the number of agents is specified. The model then creates a scheduler, instantiates each agent with a unique identifier, and adds them to the scheduler. During each model step, the scheduler activates the agents one by one, triggering their language-based reasoning.
-
-This structure follows the standard Mesa workflow. The model now holds an LLM client, which agents use during their step() method.
+When a LanguageModel is initialized, the number of agents is specified. The model then creates a scheduler, instantiates each agent with a unique identifier, and adds them to the scheduler. 
+During each model step, the scheduler activates the agents one by one, triggering their language-based reasoning.This structure follows the standard Mesa workflow. 
 
 The LanguageModel class is created with the following code:
-```bash 
+```python
 class LanguageModel(mesa.Model):
     """
     Mesa model with LLM-powered agents (Mesa 3 style).
@@ -150,33 +170,33 @@ class LanguageModel(mesa.Model):
 
 ## Running the Model
 
-The model is initialized with a fixed number of agents (example = 5), each identified by a unique unique_id.
-When the model step is executed, the scheduler activates all agents once. During their activation, each agent performs its step() method, where it receives a text prompt and generates a language-based response using the shared LLM client.
-```bash
+The model is initialized with a fixed number of agents (example = 5), each identified by a unique_id.
+When the model step is executed, the scheduler activates all agents once. 
+During their activation, each agent performs its step() method, where it receives a text prompt and generates a language-based response using the configured LLM backend,
+```python
 if __name__ == "__main__":
-    print("Starting Mesa-LLM with Ollama...")
+    print("Starting Mesa-llm with Ollama...")
     model = LanguageModel(5)
     model.step()  # One step = all 5 agents call the LLM once
 ```
 
 ```bash
 Agent 5: I will offer to buy one unit of good X from agent 2 at a price of $15, hoping to capitalize on the perceived shortage in the market.
-
 Agent 3: I will scan the current prices of wheat, coffee, and sugar on the market boards to assess opportunities for profitable trades or negotiations.
-
 Agent 1: I will scan the current market prices and inventory levels to determine if I can make a profitable trade with another agent, specifically looking for an opportunity to buy low or sell high.
-
 Agent 4: I will observe the current prices of all available goods and attempt to identify any potential arbitrage opportunities or mispricings that I can exploit.
-
 Agent 2: I'll check the current market prices of the two products I have available (Widgets and Gizmos) to determine my optimal asking prices for the rest of the trading session.
 ```
 
-```bash
-# Challenges: Try different llm and no. of agents.
-```
+## Next Steps
 
-## Exercise
-Change the above code and see the impact of dfferent model, no of prompt.
+- Try different prompts to change agent behavior.
+- Experiment with different numbers of agents.
+- Replace Ollama with another supported LLM backend.
+- Extend the model to allow agents to communicate with each other.
+
+
+
 
 
 
