@@ -24,7 +24,7 @@ Importantly, the rest of the simulation remains unchanged from a standard Mesa m
 
 ## What the model does
 * The model initializes a small number of agents. Each agent represents an entity capable of reasoning using language.
-* During each simulation step, the model defines a simple text input (for example, a question) that will be given to all agents.
+* During each simulation step, each agent constructs its own text prompt describing the current situation and uses it to reason about its next action.
 * The agents’ responses are printed or recorded.
 
 ## Tutorial Setup
@@ -95,6 +95,8 @@ import ollama
 ```
 
 ## Creating the Agent
+In this example, the agent is prompted to make its reasoning explicit before deciding on an action. Instead of directly producing a decision, the agent first explains how it interprets the current situation and then states what it intends to do. Making this reasoning step visible helps illustrate how language-based cognition can be integrated into Mesa’s execution loop, and allows us to observe not only agent actions but also the thought process that led to them.
+
 We begin by defining a minimal agent that uses a language model to reason about its behavior at each simulation step. The agent represents an individual participant in the model that receives a textual prompt and produces a natural-language response describing its intended action.
 
 Although the agent relies on language-based reasoning, it remains a standard Mesa agent. It inherits from mesa.Agent, follows Mesa’s normal execution loop, and is automatically assigned a unique_id by the model. Mesa continues to handle scheduling and activation without any modification.
@@ -121,9 +123,13 @@ class LanguageAgent(mesa.Agent):
         - Print the response.
         """
         prompt = (
-            f"You are agent {self.unique_id} in a simple market simulation. "
-            f"Other agents are trading and negotiating. "
-            f"Describe your next action in one short sentence."
+            f"You are agent {self.unique_id} in a simple market simulation.\n"
+            f"Other agents are trading and negotiating.\n\n"
+            f"Please respond in the following format:\n"
+            f"Reasoning:\n"
+            f"<one short paragraph>\n\n"
+            f"Action:\n"
+            f"<one short sentence>"
         )
 
         response = ollama.chat(
@@ -132,15 +138,18 @@ class LanguageAgent(mesa.Agent):
         )
 
         text = response["message"]["content"].strip()      
-        print(f"Agent {self.unique_id}: {text}")
+        print("\n" + "=" * 60)
+        print(f"Agent {self.unique_id}")
+        print(text)
+        print("=" * 60 + "\n")
 ```
 
 ## Create the Model
 After defining the agent, we create the model that manages the simulation.
 In Mesa, the model acts as a container for all agents and is responsible for their creation, scheduling, and execution over time.
 
-When a LanguageModel is initialized, the number of agents is specified. The model then creates a scheduler, instantiates each agent with a unique identifier, and adds them to the scheduler. 
-During each model step, the scheduler activates the agents one by one, triggering their language-based reasoning.This structure follows the standard Mesa workflow. 
+When a LanguageModel is initialized, the number of agents is specified. The model instantiates each agent, which is automatically tracked by Mesa’s internal AgentSet and assigned a unique identifier.
+During each model step, all agents are activated once in a randomized order using Mesa’s AgentSet API and  triggering their language-based reasoning. This structure follows the standard Mesa workflow. 
 
 The LanguageModel class is created with the following code:
 ```python
@@ -180,12 +189,41 @@ if __name__ == "__main__":
     model.step()  # One step = all 5 agents call the LLM once
 ```
 
+Note: The following output is an example of one possible run. Language model responses may vary, and not all agents will strictly follow the requested format.
+
 ```bash
-Agent 5: I will offer to buy one unit of good X from agent 2 at a price of $15, hoping to capitalize on the perceived shortage in the market.
-Agent 3: I will scan the current prices of wheat, coffee, and sugar on the market boards to assess opportunities for profitable trades or negotiations.
-Agent 1: I will scan the current market prices and inventory levels to determine if I can make a profitable trade with another agent, specifically looking for an opportunity to buy low or sell high.
-Agent 4: I will observe the current prices of all available goods and attempt to identify any potential arbitrage opportunities or mispricings that I can exploit.
-Agent 2: I'll check the current market prices of the two products I have available (Widgets and Gizmos) to determine my optimal asking prices for the rest of the trading session.
+Starting mesa-llm with Ollama...
+
+============================================================
+Agent 5
+I'm ready to play. Here's my response:
+
+Reasoning:
+As I review the current prices, I notice that the demand for goods is relatively high, which could lead to an increase in prices. Additionally, some of my fellow agents seem eager to buy, which may drive up the cost.
+
+Action:
+I decide to hold back on selling and observe the market dynamics a bit longer before making any moves.
+============================================================
+
+============================================================
+Agent 4
+Let's start!
+
+Reasoning: I've been observing the market trends and noticed that Agent 3 has been consistently buying up supply of Goods X. This might be a sign of increased demand, which could drive prices up in the long run.
+
+Action: I'll offer to sell my current stockpile of Goods Y to Agent 2 at a slightly higher price than usual to capitalize on potential future demand and profit from any price increases.
+============================================================
+
+============================================================
+Agent 3
+Let's get started. Here is my response:
+
+Reasoning:
+I've been observing the market for a while, and I think there might be an opportunity to profit from trading with agent 1, who seems to be getting too aggressive in their pricing.
+
+Action:
+I will make an offer of 10 units for 50 coins to agent 1.
+============================================================
 ```
 
 ## Next Steps
