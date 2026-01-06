@@ -184,7 +184,7 @@ if __name__ == "__main__":
 ```
 Each call to model.step() activates all agents once and prints their language-based reasoning.
 
-An example output from running the model is shown below:
+
 ```bash
 ╭─ Step 1 | SimpleAgent 1 ──────────────────────────────────────────────────────────────────────────────╮
 │                                                                                                       │
