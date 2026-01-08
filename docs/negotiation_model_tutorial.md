@@ -57,7 +57,7 @@ Adding a grid would increase complexity without improving the clarity of the neg
 ## Model Execution
 At each model step:
 - The model advances one step
-- All agents are activated using shuffle_do("step")
+- Like in classic mesa simulations, all agents are activated using shuffle_do("step")
 Each agent generates a reasoning plan using ReActReasoning and applies it.
 The console output displays the internal reasoning traces.
 
