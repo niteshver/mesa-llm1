@@ -3,7 +3,6 @@
 ## Tutorial Overview
 This tutorial introduces mesa-llm by walking through the construction of a simple language-driven agent model built on top of Mesa. Mesa-llm enables agents to reason using natural language while preserving Mesa’s standard execution model.
 
-
 The goal of this tutorial is **not** to build a complex simulation or environment.  
 Instead, it focuses on the **core idea** behind mesa-llm:
 
@@ -72,7 +71,7 @@ pip install -U -e git+https://github.com/YOUR_FORK/mesa-llm@YOUR_BRANCH#egg=mesa
 ```
 
 ## Building the Model
-After mesa-llm is installed, a model can be built.
+After mesa-llm is installed, a 'model' can be built.
 This tutorial can be followed in a regular Python script or in a [Jupyter](https://jupyter.org/) notebook.
 
 
@@ -93,9 +92,9 @@ from mesa_llm.memory.st_lt_memory import STLTMemory
 ```
 
 ## Creating the Agent
-We begin by defining a minimal agent that inherits from LLMAgent.
+We begin by defining a minimal agent that inherits from 'LLMAgent'.
 
-Unlike traditional Mesa agents, LLMAgent delegates its reasoning to a language model through a configurable reasoning strategy.
+Unlike traditional Mesa agents, 'LLMAgent' delegates its reasoning to a language model through a configurable reasoning strategy.
 In this tutorial, we use ReActReasoning, which produces both a reasoning trace and a suggested action.
 
 Using the previously imported dependencies, we define the agent class:
@@ -130,18 +129,17 @@ class SimpleAgent(LLMAgent):
 
         print(plan)
 ```
-**Note on `selected_tools`:**  
-In this tutorial, `selected_tools=[]` indicates that the agent is reasoning
-without access to any external tools.
-
-This keeps the example focused on language-based reasoning only.
-In later tutorials, tool usage will be introduced to demonstrate how
-ReAct agents can interact with environments or external systems.
 
 ## Create the Model
-The model manages agent creation and advances the simulation.
+The 'model' manages agent creation and advances the simulation.
 
-mesa-llm provides the create_agents() helper, which correctly initializes agents and registers them with Mesa’s internal AgentSet. 
+'Agent' are created using the `create_agents()` helper provided by Mesa.
+mesa-llm integrates with this mechanism by allowing `LLMAgent` to be used
+wherever a standard Mesa `Agent` is expected.
+
+`LLMAgent` is a thin wrapper around Mesa’s base `Agent` class, which is why
+agent initialization calls `super().__init__(*args, **kwargs)` to ensure
+proper registration with Mesa’s internal `AgentSet`.
 
 The SimpleModel class is created with the following code:
 ```python
@@ -182,9 +180,9 @@ if __name__ == "__main__":
     for _ in range(3):
         model.step()
 ```
-Each call to model.step() activates all agents once and prints their language-based reasoning.
+Each call to 'model.step()' activates all agents once and prints their language-based reasoning.
 
-- An example output from running the model is shown below
+- An example output from running the 'model' is shown below
 
 ```bash
 ╭─ Step 1 | SimpleAgent 1 ──────────────────────────────────────────────────────────────────────────────╮
@@ -207,13 +205,27 @@ This is expected behavior when using ReActReasoning, which always produces both 
 - Actions are shown only as part of the reasoning trace.
 - Environments and action execution are introduced in later tutorials.
 
-## Next Steps
-- After completing this tutorial, you can explore more advanced topics:
-- Adding explicit actions such as wait and act
-- Executing actions chosen by the agent
-- Introducing spatial environments using MultiGrid
-- Running multiple agents with different prompts
-- Switching to other supported LLM backends
+## Exercises
+
+Try the following small exercises to better understand how agent reasoning works in this model:
+
+1. **Modify the prompt**  
+   Change the prompt passed to the agent and observe how the reasoning trace changes.
+   For example, encourage the agent to be more cautious or more verbose.
+
+2. **Add another agent**  
+   Create a second agent with a different initial `internal_state` and compare how
+   their reasoning differs during the same model steps.
+
+3. **Extend the observation**  
+   Add an additional value to the observation dictionary passed to the reasoning module
+   and see how it affects the agent’s reasoning output.
+
+4. **Increase the number of steps**  
+   Run the model for more steps and observe how the reasoning evolves over time.
+
+In this tutorial, actions are not executed and are shown only as part of the reasoning
+trace. Later tutorials will introduce environments and action execution.
 
 
 
