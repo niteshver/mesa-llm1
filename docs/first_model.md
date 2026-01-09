@@ -1,7 +1,7 @@
 # Creating Your First mesa-llm Model
 
 ## Tutorial Overview
-This tutorial introduces mesa-llm by walking through the construction of a simple language-driven agent model built on top of Mesa. Mesa-llm enables agents to reason using natural language while preserving Mesa’s standard execution model.
+This tutorial introduces mesa-llm by walking through the construction of a simple language-driven agent model built on top of Mesa. Mesa-llm enables agents to reason using natural language while preserving Mesa’s standard execution model. If it's your first time using mesa, we suggest starting with the classic [creating your first model tutorials](https://mesa.readthedocs.io/latest/tutorials/0_first_model.html) before diving into mesa-llm.
 
 The goal of this tutorial is **not** to build a complex simulation or environment.  
 Instead, it focuses on the **core idea** behind mesa-llm:
