@@ -2,10 +2,9 @@
 
 ## About This Tutorial
 
-This tutorial is inspired by the negotiation example provided in the mesa-llm repository:
-``` bash
-https://github.com/mesa/mesa-llm/tree/main/examples/negotiation
-```
+This tutorial is inspired by the official
+[Mesa-llm Negotiation Example](https://github.com/mesa/mesa-llm/tree/main/examples/negotiation)
+
 The goal here is **not to replicate** the original example, but to present a **simplified and tutorial-friendly version** that focuses on reasoning structure and agent interaction.
 
 Key differences from the original example include:

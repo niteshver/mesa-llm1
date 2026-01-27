@@ -28,6 +28,7 @@ human-like agent behavior.
 While mesa-llm adds:
 - Prompt-driven reasoning
 - Reasoning strategies (e.g. ReAct)
+- Optional memory components for contextual reasoning across steps
 - Integration with LLM backends such as OpenAI, Ollama, and others.
 
 ## Model Description
